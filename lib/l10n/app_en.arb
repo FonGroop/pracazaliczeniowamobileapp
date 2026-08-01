@@ -1,0 +1,136 @@
+{
+  "@@locale": "en",
+  "appTitle": "City Companion",
+  "discover": "Discover",
+  "map": "Map",
+  "saved": "Saved",
+  "settings": "Settings",
+  "planner": "Planner",
+  "savePlace": "Save place",
+  "openDetails": "Open details",
+  "goToPlanner": "Go to planner",
+  "replaceWithMap": "Replace with map",
+  "back": "Back",
+  "darkMode": "Dark mode",
+  "english": "English",
+  "polish": "Polish",
+  "useGps": "Use GPS",
+  "name": "Name",
+  "notes": "Ideas",
+  "chooseDate": "Choose date",
+  "chooseFile": "Choose file",
+  "submit": "Submit",
+  "formSaved": "Plan saved locally",
+  "preferencesUpdated": "Preferences updated",
+  "more": "More",
+  "places": "Places",
+  "newPlan": "New plan",
+  "newNote": "New idea",
+  "editNote": "Edit idea",
+  "addStop": "Add stop",
+  "addToPlan": "Add to plan",
+  "addCustomStop": "Add a custom stop",
+  "itinerary": "Itinerary",
+  "saveNote": "Save idea",
+  "deleteNote": "Delete idea",
+  "removeStop": "Remove stop",
+  "manageNotes": "Manage ideas",
+  "myIdeas": "My ideas",
+  "syncNow": "Sync now",
+  "locationUnavailable": "Your location is not available.",
+  "yourLocation": "Your location",
+  "mapIdeaPrompt": "Tap the map to choose a spot for your idea, or tap a marker for details.",
+  "mapIdeaSelected": "Selected spot ready — use Add idea to save it.",
+  "addIdea": "Add idea",
+  "centerOnLocation": "Center on my location",
+  "editIdea": "Edit idea",
+  "close": "Close",
+  "mapCentered": "Map centered on your location.",
+  "gpsUnavailable": "Your location is not available. Check GPS permission."
+  ,"welcomeTitle": "Make the city yours"
+  ,"welcomeBody": "Save places you love and build a simple plan for your next day out."
+  ,"planADay": "Plan a day"
+  ,"ideasToday": "Ideas for today"
+  ,"guideError": "Your guide could not be opened."
+  ,"retry": "Retry"
+  ,"savedFlash": "Saved"
+  ,"deletePlan": "Delete plan"
+  ,"deletePlanQuestion": "Delete this plan?"
+  ,"deletePlanDescription": "The plan and its itinerary stops will be removed."
+  ,"cancel": "Cancel"
+  ,"delete": "Delete"
+  ,"planStopsError": "Plan stops could not be opened."
+  ,"itineraryEmpty": "Add a saved place, idea, or custom stop to begin."
+  ,"reorderStops": "Press and hold a stop to change its order."
+  ,"customStopDescription": "Add a place that is not in Saved or Ideas."
+  ,"savedPlaces": "Saved places"
+  ,"stopName": "Stop name"
+  ,"enterStopName": "Enter a stop name"
+  ,"optionalNote": "Note (optional)"
+  ,"adding": "Adding…"
+  ,"planUnavailable": "This plan is no longer available."
+  ,"ideasError": "Ideas could not be opened."
+  ,"ideasUpToDate": "Your ideas are up to date."
+  ,"ideasSyncError": "Cloud sync could not finish. Your ideas are safe here."
+  ,"ideaName": "Idea name"
+  ,"ideaNameRequired": "Give your idea a name"
+  ,"ideaDetails": "Notes or details (optional)"
+  ,"saving": "Saving…"
+  ,"ideaSaved": "Idea saved"
+  ,"ideaSavedDevice": "Idea saved on this device."
+  ,"ideaSaveError": "Your idea could not be saved. Try again."
+  ,"deleteIdeaQuestion": "Delete this idea?"
+  ,"deleteIdeaDescription": "This idea will be removed from this device and Firebase."
+  ,"ideaRemoved": "Idea removed"
+  ,"manageIdeas": "Manage ideas"
+  ,"savedPlacesError": "Saved places could not be opened."
+  ,"placeActions": "Place actions"
+  ,"showOnMap": "Show on map"
+  ,"removeSavedPlace": "Remove from saved"
+  ,"removeSavedPlaceQuestion": "Remove saved place?"
+  ,"removeSavedPlaceDescription": "It will remain in any plan you added it to."
+  ,"savedPlaceRemoved": "Saved place removed"
+  ,"ideasEmpty": "Add an idea on the map to keep it with a location."
+  ,"openIdeas": "Open ideas"
+  ,"ideaDeleteSyncing": "Idea deleted. Firebase removal is being synced."
+  ,"planEditorIntro": "Start with a day and add places from Saved or Ideas afterwards."
+  ,"planName": "Plan name"
+  ,"planNameRequired": "Give this plan a name"
+  ,"planNotesOptional": "Plan notes (optional)"
+  ,"dateLabel": "Date: {date}"
+  ,"@dateLabel": {"placeholders": {"date": {}}}
+  ,"choosePlanFile": "Choose a plan file"
+  ,"creating": "Creating…"
+  ,"createPlan": "Create plan"
+  ,"plannerEmptyTitle": "Plan your next city day"
+  ,"plannerEmptyDescription": "Create a plan, then add places you saved and ideas you made on the map."
+  ,"plansError": "Your plans could not be opened."
+  ,"addSavedPlaceToPlan": "Add {place} to…"
+  ,"@addSavedPlaceToPlan": {"placeholders": {"place": {}}}
+  ,"addIdeaToPlan": "Add {idea} to…"
+  ,"@addIdeaToPlan": {"placeholders": {"idea": {}}}
+  ,"savedPlaceAddedToPlan": "Saved place added to plan"
+  ,"ideaAddedToPlan": "Idea added to plan"
+  ,"createPlanBeforeSavedPlace": "Create a plan first, then add saved places to it."
+  ,"createPlanBeforeIdea": "Create a plan first, then add ideas to it."
+  ,"placeUnavailable": "This place is no longer available in your guide."
+  ,"placeFallback": "Place {id}"
+  ,"@placeFallback": {"placeholders": {"id": {}}}
+  ,"savedPlace": "Place saved"
+  ,"stopRemoved": "Stop removed from plan"
+  ,"savePlaceOrIdeaFirst": "Save a place or add an idea on the map first."
+  ,"locationLabel": "Location: {latitude}, {longitude}"
+  ,"@locationLabel": {"placeholders": {"latitude": {}, "longitude": {}}}
+  ,"ideasWaitingToSync": "{count} idea(s) waiting to sync."
+  ,"@ideasWaitingToSync": {"placeholders": {"count": {}}}
+  ,"routeError": "Navigation error"
+  ,"syncStatusSynced": "Synced"
+  ,"syncStatusWaiting": "Waiting to sync"
+  ,"preferencesStoredLocally": "Your preferences and saved places stay on this device."
+  ,"ideasStartEmpty": "Create an idea here, or choose a spot on the map to attach an idea to it."
+  ,"chooseAttachment": "Choose attachment"
+  ,"changeAttachment": "Change attachment"
+  ,"attachment": "Attachment: {name}"
+  ,"@attachment": {"placeholders": {"name": {}}}
+  ,"attachmentPickError": "The attachment picker could not be opened. Try again."
+}

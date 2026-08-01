@@ -1,0 +1,94 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:latlong2/latlong.dart';
+
+import '../data/models/city_note.dart';
+import '../data/models/plan_item.dart';
+import '../data/models/saved_place_entity.dart';
+import '../data/models/travel_plan.dart';
+import '../data/models/tour_place.dart';
+import '../data/repositories/place_repository.dart';
+import '../data/repositories/note_repository.dart';
+import '../data/repositories/plan_repository.dart';
+import '../data/services/api_service.dart';
+import '../data/services/attachment_service.dart';
+import '../data/services/local_database_service.dart';
+import '../data/services/firebase_service.dart';
+import '../data/services/location_service.dart';
+import '../data/services/preferences_service.dart';
+
+final preferencesProvider = FutureProvider<PreferencesService>(
+  (ref) => PreferencesService.create(),
+);
+
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
+final useGpsProvider = StateProvider<bool>((ref) => false);
+final appNoticeProvider = StateProvider<String?>((ref) => null);
+
+void showAppNotice(WidgetRef ref, String message) {
+  ref.read(appNoticeProvider.notifier).state = message;
+}
+
+final appBootstrapProvider = FutureProvider<void>((ref) async {
+  final prefs = await ref.watch(preferencesProvider.future);
+  await ref.read(planRepositoryProvider).migrateLegacyPlan(prefs);
+  ref.read(themeModeProvider.notifier).state = prefs.isDarkMode
+      ? ThemeMode.dark
+      : ThemeMode.light;
+  ref.read(localeProvider.notifier).state = Locale(prefs.languageCode);
+  ref.read(useGpsProvider.notifier).state = prefs.useGps;
+});
+
+final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
+  return PlaceRepository(
+    apiService: ApiService(),
+    databaseService: LocalDatabaseService.instance,
+  );
+});
+
+final placesProvider = FutureProvider<List<TourPlace>>((ref) {
+  final languageCode = ref.watch(localeProvider).languageCode;
+  return ref
+      .watch(placeRepositoryProvider)
+      .loadPlaces(languageCode: languageCode);
+});
+
+final savedPlacesProvider = StreamProvider<List<SavedPlaceEntity>>((ref) {
+  return ref.watch(placeRepositoryProvider).watchSavedPlaces();
+});
+
+final planRepositoryProvider = Provider<PlanRepository>((ref) {
+  return PlanRepository(databaseService: LocalDatabaseService.instance);
+});
+
+final plansProvider = StreamProvider<List<TravelPlan>>((ref) {
+  return ref.watch(planRepositoryProvider).watchPlans();
+});
+
+final planProvider = StreamProvider.family<TravelPlan?, String>((ref, planId) {
+  return ref.watch(planRepositoryProvider).watchPlan(planId);
+});
+
+final planItemsProvider = StreamProvider.family<List<PlanItem>, String>(
+  (ref, planId) => ref.watch(planRepositoryProvider).watchPlanItems(planId),
+);
+
+final noteRepositoryProvider = Provider<NoteRepository>((ref) {
+  return NoteRepository(
+    databaseService: LocalDatabaseService.instance,
+    firebaseService: FirebaseService(),
+    attachmentService: AttachmentService(),
+  );
+});
+
+final notesProvider = StreamProvider<List<CityNote>>((ref) {
+  return ref.watch(noteRepositoryProvider).watchNotes();
+});
+
+final locationProvider = FutureProvider<LatLng>((ref) {
+  final useGps = ref.watch(useGpsProvider);
+  if (!useGps) return Future.value(const LatLng(52.2297, 21.0122));
+  return LocationService().currentPosition();
+});

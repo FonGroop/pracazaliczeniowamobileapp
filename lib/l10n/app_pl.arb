@@ -1,0 +1,136 @@
+{
+  "@@locale": "pl",
+  "appTitle": "City Companion",
+  "discover": "Odkrywaj",
+  "map": "Mapa",
+  "saved": "Zapisane",
+  "settings": "Ustawienia",
+  "planner": "Planer",
+  "savePlace": "Zapisz miejsce",
+  "openDetails": "Szczegóły",
+  "goToPlanner": "Idź do planera",
+  "replaceWithMap": "Zastąp mapą",
+  "back": "Wróć",
+  "darkMode": "Tryb ciemny",
+  "english": "Angielski",
+  "polish": "Polski",
+  "useGps": "Użyj GPS",
+  "name": "Imię",
+  "notes": "Pomysły",
+  "chooseDate": "Wybierz datę",
+  "chooseFile": "Wybierz plik",
+  "submit": "Zapisz",
+  "formSaved": "Plan zapisany lokalnie",
+  "preferencesUpdated": "Preferencje zapisane",
+  "more": "Więcej",
+  "places": "Miejsca",
+  "newPlan": "Nowy plan",
+  "newNote": "Nowy pomysł",
+  "editNote": "Edytuj pomysł",
+  "addStop": "Dodaj punkt",
+  "addToPlan": "Dodaj do planu",
+  "addCustomStop": "Dodaj własny punkt",
+  "itinerary": "Plan dnia",
+  "saveNote": "Zapisz pomysł",
+  "deleteNote": "Usuń pomysł",
+  "removeStop": "Usuń punkt",
+  "manageNotes": "Zarządzaj pomysłami",
+  "myIdeas": "Moje pomysły",
+  "syncNow": "Synchronizuj teraz",
+  "locationUnavailable": "Twoja lokalizacja jest niedostępna.",
+  "yourLocation": "Twoja lokalizacja",
+  "mapIdeaPrompt": "Dotknij mapy, aby wybrać miejsce dla pomysłu, lub znacznik, aby zobaczyć szczegóły.",
+  "mapIdeaSelected": "Miejsce wybrane — użyj Dodaj pomysł, aby je zapisać.",
+  "addIdea": "Dodaj pomysł",
+  "centerOnLocation": "Wyśrodkuj na mojej lokalizacji",
+  "editIdea": "Edytuj pomysł",
+  "close": "Zamknij",
+  "mapCentered": "Mapa została wyśrodkowana na Twojej lokalizacji.",
+  "gpsUnavailable": "Twoja lokalizacja jest niedostępna. Sprawdź uprawnienia GPS."
+  ,"welcomeTitle": "Odkrywaj miasto po swojemu"
+  ,"welcomeBody": "Zapisuj miejsca, które Ci się podobają, i ułóż prosty plan na kolejny dzień."
+  ,"planADay": "Zaplanuj dzień"
+  ,"ideasToday": "Pomysły na dziś"
+  ,"guideError": "Nie udało się otworzyć przewodnika."
+  ,"retry": "Spróbuj ponownie"
+  ,"savedFlash": "Zapisano"
+  ,"deletePlan": "Usuń plan"
+  ,"deletePlanQuestion": "Usunąć ten plan?"
+  ,"deletePlanDescription": "Plan i wszystkie jego punkty zostaną usunięte."
+  ,"cancel": "Anuluj"
+  ,"delete": "Usuń"
+  ,"planStopsError": "Nie udało się otworzyć punktów planu."
+  ,"itineraryEmpty": "Dodaj zapisane miejsce, pomysł lub własny punkt, aby rozpocząć."
+  ,"reorderStops": "Przytrzymaj punkt, aby zmienić jego kolejność."
+  ,"customStopDescription": "Dodaj miejsce, którego nie ma w Zapisanych ani Pomysłach."
+  ,"savedPlaces": "Zapisane miejsca"
+  ,"stopName": "Nazwa punktu"
+  ,"enterStopName": "Wpisz nazwę punktu"
+  ,"optionalNote": "Notatka (opcjonalnie)"
+  ,"adding": "Dodawanie…"
+  ,"planUnavailable": "Ten plan nie jest już dostępny."
+  ,"ideasError": "Nie udało się otworzyć pomysłów."
+  ,"ideasUpToDate": "Twoje pomysły są aktualne."
+  ,"ideasSyncError": "Synchronizacja z chmurą nie powiodła się. Twoje pomysły są bezpieczne."
+  ,"ideaName": "Nazwa pomysłu"
+  ,"ideaNameRequired": "Nadaj nazwę pomysłowi"
+  ,"ideaDetails": "Notatki lub szczegóły (opcjonalnie)"
+  ,"saving": "Zapisywanie…"
+  ,"ideaSaved": "Pomysł zapisany"
+  ,"ideaSavedDevice": "Pomysł zapisany na tym urządzeniu."
+  ,"ideaSaveError": "Nie udało się zapisać pomysłu. Spróbuj ponownie."
+  ,"deleteIdeaQuestion": "Usunąć ten pomysł?"
+  ,"deleteIdeaDescription": "Pomysł zostanie usunięty z urządzenia i Firebase."
+  ,"ideaRemoved": "Pomysł usunięty"
+  ,"manageIdeas": "Zarządzaj pomysłami"
+  ,"savedPlacesError": "Nie udało się otworzyć zapisanych miejsc."
+  ,"placeActions": "Opcje miejsca"
+  ,"showOnMap": "Pokaż na mapie"
+  ,"removeSavedPlace": "Usuń z zapisanych"
+  ,"removeSavedPlaceQuestion": "Usunąć zapisane miejsce?"
+  ,"removeSavedPlaceDescription": "Miejsce pozostanie w każdym planie, do którego zostało dodane."
+  ,"savedPlaceRemoved": "Usunięto zapisane miejsce"
+  ,"ideasEmpty": "Dodaj pomysł na mapie, aby zachować go wraz z lokalizacją."
+  ,"openIdeas": "Otwórz pomysły"
+  ,"ideaDeleteSyncing": "Pomysł usunięty. Trwa usuwanie go z Firebase."
+  ,"planEditorIntro": "Wybierz dzień, a potem dodaj miejsca z Zapisanych lub Pomysłów."
+  ,"planName": "Nazwa planu"
+  ,"planNameRequired": "Nadaj planowi nazwę"
+  ,"planNotesOptional": "Notatki do planu (opcjonalnie)"
+  ,"dateLabel": "Data: {date}"
+  ,"@dateLabel": {"placeholders": {"date": {}}}
+  ,"choosePlanFile": "Wybierz plik do planu"
+  ,"creating": "Tworzenie…"
+  ,"createPlan": "Utwórz plan"
+  ,"plannerEmptyTitle": "Zaplanuj kolejny dzień w mieście"
+  ,"plannerEmptyDescription": "Utwórz plan, a potem dodaj zapisane miejsca i pomysły utworzone na mapie."
+  ,"plansError": "Nie udało się otworzyć planów."
+  ,"addSavedPlaceToPlan": "Dodaj {place} do…"
+  ,"@addSavedPlaceToPlan": {"placeholders": {"place": {}}}
+  ,"addIdeaToPlan": "Dodaj {idea} do…"
+  ,"@addIdeaToPlan": {"placeholders": {"idea": {}}}
+  ,"savedPlaceAddedToPlan": "Dodano zapisane miejsce do planu"
+  ,"ideaAddedToPlan": "Dodano pomysł do planu"
+  ,"createPlanBeforeSavedPlace": "Najpierw utwórz plan, a potem dodaj do niego zapisane miejsca."
+  ,"createPlanBeforeIdea": "Najpierw utwórz plan, a potem dodaj do niego pomysły."
+  ,"placeUnavailable": "To miejsce nie jest już dostępne w przewodniku."
+  ,"placeFallback": "Miejsce {id}"
+  ,"@placeFallback": {"placeholders": {"id": {}}}
+  ,"savedPlace": "Miejsce zapisane"
+  ,"stopRemoved": "Usunięto punkt z planu"
+  ,"savePlaceOrIdeaFirst": "Najpierw zapisz miejsce lub dodaj pomysł na mapie."
+  ,"locationLabel": "Lokalizacja: {latitude}, {longitude}"
+  ,"@locationLabel": {"placeholders": {"latitude": {}, "longitude": {}}}
+  ,"ideasWaitingToSync": "Pomysły oczekujące na synchronizację: {count}."
+  ,"@ideasWaitingToSync": {"placeholders": {"count": {}}}
+  ,"routeError": "Błąd nawigacji"
+  ,"syncStatusSynced": "Zsynchronizowano"
+  ,"syncStatusWaiting": "Oczekuje na synchronizację"
+  ,"preferencesStoredLocally": "Twoje preferencje i zapisane miejsca pozostają na tym urządzeniu."
+  ,"ideasStartEmpty": "Utwórz tu pomysł albo wybierz punkt na mapie, aby przypisać do niego pomysł."
+  ,"chooseAttachment": "Wybierz załącznik"
+  ,"changeAttachment": "Zmień załącznik"
+  ,"attachment": "Załącznik: {name}"
+  ,"@attachment": {"placeholders": {"name": {}}}
+  ,"attachmentPickError": "Nie udało się otworzyć wyboru załącznika. Spróbuj ponownie."
+}
