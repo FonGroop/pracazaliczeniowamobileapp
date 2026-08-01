@@ -133,4 +133,18 @@
   ,"attachment": "Attachment: {name}"
   ,"@attachment": {"placeholders": {"name": {}}}
   ,"attachmentPickError": "The attachment picker could not be opened. Try again."
+  ,"nearbyPlaces": "Nearby places"
+  ,"recommendationsNearLocation": "Recommendations are based on your starting location. Move the map to explore somewhere else."
+  ,"recommendationsFollowMap": "Recommendations follow the visible map area."
+  ,"updatingNearbyPlaces": "Finding places near the new map area…"
+  ,"placesInCluster": "{count} places in this area"
+  ,"@placesInCluster": {"placeholders": {"count": {"type": "int"}}}
+  ,"zoomInToSeparateMarkers": "Zoom in to separate overlapping markers."
+  ,"selectPointBeforeIdea": "Select a point on the map before creating an idea."
+  ,"locationServicesDisabled": "Location Services are disabled. Enable them in system settings, then try again."
+  ,"locationPermissionDenied": "Location permission was denied. Allow location access in settings, then try again."
+  ,"locationPermissionPermanentlyDenied": "Location access is blocked for this app. Enable it in system privacy settings, then try again."
+  ,"locationFixUnavailable": "The device could not determine your current position. Check Location Services and your connection, then try again."
+  ,"openSettings": "Open settings"
+  ,"locationSettingsOpenFailed": "Settings could not be opened automatically. Open your system privacy settings manually."
 }

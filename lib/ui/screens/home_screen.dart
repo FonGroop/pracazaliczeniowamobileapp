@@ -12,6 +12,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final places = ref.watch(placesProvider);
+    final discoveryArea = ref.watch(discoveryAreaProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -33,23 +34,38 @@ class HomeScreen extends ConsumerWidget {
             _WelcomeCard(onPlanTrip: () => context.pushNamed('planner')),
             const SizedBox(height: 20),
             Text(
-              l10n.ideasToday,
+              l10n.nearbyPlaces,
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.map_outlined, size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    discoveryArea == null
+                        ? l10n.recommendationsNearLocation
+                        : l10n.recommendationsFollowMap,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
-            places.when(
-              loading: () => const Center(
+            switch (places) {
+              AsyncData(:final value) => _PlacesGrid(items: value),
+              AsyncError(:final error) => _ErrorPanel(
+                error: error.toString(),
+                onRetry: () => ref.invalidate(placesProvider),
+              ),
+              _ => const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32),
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (error, _) => _ErrorPanel(
-                error: error.toString(),
-                onRetry: () => ref.invalidate(placesProvider),
-              ),
-              data: (items) => _PlacesGrid(items: items),
-            ),
+            },
           ],
         ),
       ),
@@ -71,13 +87,14 @@ class _PlacesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final compact = constraints.maxWidth < 560;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: items.length,
           gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: constraints.maxWidth < 560 ? 520 : 360,
-            mainAxisExtent: 188,
+            maxCrossAxisExtent: compact ? 520 : 460,
+            mainAxisExtent: compact ? 236 : 220,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -145,9 +162,12 @@ class _PlaceTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Card(
-      elevation: 0,
+      elevation: 1,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
       child: InkWell(
         onTap: () => context.pushNamed(
           'details',
@@ -161,7 +181,15 @@ class _PlaceTile extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(child: Text('${place.id}')),
+                  CircleAvatar(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.location_on_outlined),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -177,7 +205,7 @@ class _PlaceTile extends ConsumerWidget {
               Expanded(
                 child: Text(
                   place.body,
-                  maxLines: 3,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

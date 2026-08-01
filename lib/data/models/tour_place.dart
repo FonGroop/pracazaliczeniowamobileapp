@@ -15,15 +15,4 @@ abstract class TourPlace with _$TourPlace {
 
   factory TourPlace.fromJson(Map<String, dynamic> json) =>
       _$TourPlaceFromJson(json);
-
-  factory TourPlace.fromApiJson(Map<String, dynamic> json) {
-    final id = (json['id'] as num?)?.toInt() ?? 0;
-    return TourPlace(
-      id: id,
-      title: (json['title'] as String?) ?? 'City stop $id',
-      body: (json['body'] as String?) ?? 'No description',
-      latitude: 52.2297 + (id % 8) * 0.012,
-      longitude: 21.0122 + (id % 8) * 0.014,
-    );
-  }
 }

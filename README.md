@@ -1,7 +1,7 @@
 # City Companion
 
-Flutter application for discovering Warsaw, saving places, creating map-based
-ideas and planning a day in the city.
+Flutter application for discovering nearby places, saving them, creating
+map-based ideas and planning a day in the city.
 
 ## Requirements
 
@@ -18,14 +18,14 @@ ideas and planning a day in the city.
    cp .env.example .env
    ```
 
-   Set `PLACES_API_URL` in `.env`. The supplied example uses the public
-   JSONPlaceholder endpoint for the Dio demonstration request.
+   Set `PLACES_API_URL` in `.env`. The supplied template points to Wikipedia
+   GeoSearch and substitutes `{language}` with `pl` or `en` at runtime.
 
 3. Install dependencies and generate code:
 
    ```bash
    flutter pub get
-   dart run build_runner build --delete-conflicting-outputs
+   dart run build_runner build
    flutter gen-l10n
    ```
 
@@ -86,6 +86,21 @@ service cloud.firestore {
 }
 ```
 
+## External places API
+
+The Discover screen and map share one Riverpod discovery area. On first launch,
+GPS is enabled and the app requests places near the user's location. After the
+user stops moving or zooming the map, the app derives a center and search radius
+from the visible viewport, waits briefly to avoid excessive requests, and
+replaces the previous recommendations on both screens.
+
+DIO sends the center and radius to Wikipedia GeoSearch. Freezed and
+json_serializable decode the response before the repository maps it to app
+models. Polish mode queries Polish Wikipedia and English mode queries English
+Wikipedia. GPS can be disabled in Settings; Warsaw is then used as the starting
+point. If Wikipedia is unavailable while viewing Warsaw, only built-in places
+inside the current search radius are used as an offline fallback.
+
 ## Generated and private files
 
 The repository does not contain `.env`, Firebase credentials or generated
@@ -94,7 +109,7 @@ Regenerate them with the commands above after cloning. When you change a
 Freezed model or Envied configuration, run:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 ```
 
 When you change an ARB localization file, run:
@@ -110,7 +125,7 @@ flutter gen-l10n
 2. Generate and verify the project locally:
 
    ```bash
-   dart run build_runner build --delete-conflicting-outputs
+   dart run build_runner build
    flutter gen-l10n
    flutter test
    flutter analyze
@@ -146,3 +161,13 @@ If an unwanted file appears in `git status`, check why before staging it:
 ```bash
 git check-ignore -v path/to/file
 ```
+
+## macOS location troubleshooting
+
+The macOS runner already contains the required location entitlement and usage
+description. If centering is denied, use the app's **Center on my location**
+button and choose **Open settings**. In macOS, open **System Settings → Privacy
+& Security → Location Services**, enable Location Services and allow
+`pracazaliczeniowamobileapp`, then return to the app and press the centering
+button again. Stop and rebuild the app if it does not yet appear in the system
+list.

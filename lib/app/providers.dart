@@ -24,7 +24,7 @@ final preferencesProvider = FutureProvider<PreferencesService>(
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
 final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
-final useGpsProvider = StateProvider<bool>((ref) => false);
+final useGpsProvider = StateProvider<bool>((ref) => true);
 final appNoticeProvider = StateProvider<String?>((ref) => null);
 
 void showAppNotice(WidgetRef ref, String message) {
@@ -48,11 +48,28 @@ final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
   );
 });
 
-final placesProvider = FutureProvider<List<TourPlace>>((ref) {
+typedef DiscoveryArea = ({LatLng center, int radiusMeters});
+
+/// The area currently driving recommendations on both Discover and Map.
+/// A null value means that the user's configured starting location is used.
+final discoveryAreaProvider = StateProvider<DiscoveryArea?>((ref) => null);
+
+final placesProvider = FutureProvider<List<TourPlace>>((ref) async {
   final languageCode = ref.watch(localeProvider).languageCode;
+  final area = ref.watch(discoveryAreaProvider);
+  final LatLng searchCenter;
+  if (area != null) {
+    searchCenter = area.center;
+  } else {
+    searchCenter = await ref.watch(locationProvider.future);
+  }
   return ref
       .watch(placeRepositoryProvider)
-      .loadPlaces(languageCode: languageCode);
+      .loadPlaces(
+        languageCode: languageCode,
+        center: searchCenter,
+        radiusMeters: area?.radiusMeters ?? 5000,
+      );
 });
 
 final savedPlacesProvider = StreamProvider<List<SavedPlaceEntity>>((ref) {
@@ -87,8 +104,12 @@ final notesProvider = StreamProvider<List<CityNote>>((ref) {
   return ref.watch(noteRepositoryProvider).watchNotes();
 });
 
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return LocationService();
+});
+
 final locationProvider = FutureProvider<LatLng>((ref) {
   final useGps = ref.watch(useGpsProvider);
   if (!useGps) return Future.value(const LatLng(52.2297, 21.0122));
-  return LocationService().currentPosition();
+  return ref.watch(locationServiceProvider).currentPosition();
 });

@@ -133,4 +133,18 @@
   ,"attachment": "Załącznik: {name}"
   ,"@attachment": {"placeholders": {"name": {}}}
   ,"attachmentPickError": "Nie udało się otworzyć wyboru załącznika. Spróbuj ponownie."
+  ,"nearbyPlaces": "Miejsca w pobliżu"
+  ,"recommendationsNearLocation": "Rekomendacje bazują na lokalizacji początkowej. Przesuń mapę, aby odkryć inne miejsce."
+  ,"recommendationsFollowMap": "Rekomendacje odpowiadają obszarowi widocznemu na mapie."
+  ,"updatingNearbyPlaces": "Wyszukiwanie miejsc w nowym obszarze mapy…"
+  ,"placesInCluster": "Miejsca w tym obszarze: {count}"
+  ,"@placesInCluster": {"placeholders": {"count": {"type": "int"}}}
+  ,"zoomInToSeparateMarkers": "Powiększ mapę, aby rozdzielić nakładające się znaczniki."
+  ,"selectPointBeforeIdea": "Wybierz punkt na mapie przed utworzeniem pomysłu."
+  ,"locationServicesDisabled": "Usługi lokalizacji są wyłączone. Włącz je w ustawieniach systemu i spróbuj ponownie."
+  ,"locationPermissionDenied": "Odmówiono dostępu do lokalizacji. Zezwól na dostęp w ustawieniach i spróbuj ponownie."
+  ,"locationPermissionPermanentlyDenied": "Dostęp do lokalizacji jest zablokowany dla tej aplikacji. Włącz go w ustawieniach prywatności systemu i spróbuj ponownie."
+  ,"locationFixUnavailable": "Urządzenie nie mogło ustalić bieżącej pozycji. Sprawdź usługi lokalizacji i połączenie, a następnie spróbuj ponownie."
+  ,"openSettings": "Otwórz ustawienia"
+  ,"locationSettingsOpenFailed": "Nie udało się automatycznie otworzyć ustawień. Otwórz ręcznie ustawienia prywatności systemu."
 }

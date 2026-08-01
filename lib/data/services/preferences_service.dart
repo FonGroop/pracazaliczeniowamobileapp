@@ -18,7 +18,7 @@ class PreferencesService {
 
   bool get isDarkMode => _prefs.getBool('darkMode') ?? false;
   String get languageCode => _prefs.getString('languageCode') ?? 'en';
-  bool get useGps => _box.read<bool>('useGps') ?? false;
+  bool get useGps => _box.read<bool>('useGps') ?? true;
   Map<String, dynamic>? get lastPlan =>
       _box.read<Map<String, dynamic>>('lastPlan');
 
