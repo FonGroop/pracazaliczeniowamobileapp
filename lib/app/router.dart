@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../data/models/city_note.dart';
+import '../data/models/map_focus_target.dart';
 import '../data/models/tour_place.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/screens/detail_screen.dart';
@@ -42,8 +43,13 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/map',
           name: 'map',
-          builder: (context, state) =>
-              MapScreen(initialCenter: state.extra as LatLng?),
+          builder: (context, state) {
+            final extra = state.extra;
+            return MapScreen(
+              focusTarget: extra is MapFocusTarget ? extra : null,
+              initialCenter: extra is LatLng ? extra : null,
+            );
+          },
         ),
         GoRoute(
           path: '/saved',

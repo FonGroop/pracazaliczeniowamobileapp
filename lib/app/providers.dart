@@ -40,27 +40,41 @@ final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
 
 typedef DiscoveryArea = ({LatLng center, int radiusMeters});
 
+const defaultDiscoveryCenter = LatLng(52.2297, 21.0122);
+
 /// The area currently driving recommendations on both Discover and Map.
 /// A null value means that the user's configured starting location is used.
 final discoveryAreaProvider = StateProvider<DiscoveryArea?>((ref) => null);
 
-final placesProvider = FutureProvider<List<TourPlace>>((ref) async {
-  final languageCode = ref.watch(localeProvider).languageCode;
-  final area = ref.watch(discoveryAreaProvider);
-  final LatLng searchCenter;
-  if (area != null) {
-    searchCenter = area.center;
-  } else {
-    searchCenter = await ref.watch(locationProvider.future);
+final placesProvider = FutureProvider<List<TourPlace>>(
+  (ref) async {
+    final languageCode = ref.watch(localeProvider).languageCode;
+    final area = ref.watch(discoveryAreaProvider);
+    final searchCenter = area?.center ?? await _locationOrDefault(ref);
+    final repository = ref.watch(placeRepositoryProvider);
+    final radiusMeters = area?.radiusMeters ?? 5000;
+    return repository.loadPlaces(
+      languageCode: languageCode,
+      center: searchCenter,
+      radiusMeters: radiusMeters,
+    );
+  },
+  // The UI has explicit Retry/refresh actions. Automatic retries keep iOS
+  // permission failures and network timeouts loading for much longer.
+  retry: (_, _) => null,
+);
+
+Future<LatLng> _locationOrDefault(Ref ref) async {
+  try {
+    return await ref.watch(locationProvider.future);
+  } on LocationFailure catch (error) {
+    // A denied/unavailable GPS fix must not prevent Discover or Map from
+    // loading. Keep locationProvider failed so the map does not draw this
+    // fallback as the user's real position.
+    debugPrint('Using the default discovery center: $error');
+    return defaultDiscoveryCenter;
   }
-  final repository = ref.watch(placeRepositoryProvider);
-  final radiusMeters = area?.radiusMeters ?? 5000;
-  return repository.loadPlaces(
-    languageCode: languageCode,
-    center: searchCenter,
-    radiusMeters: radiusMeters,
-  );
-});
+}
 
 final savedPlacesProvider = StreamProvider<List<SavedPlaceEntity>>((ref) {
   return ref.watch(placeRepositoryProvider).watchSavedPlaces();
@@ -102,8 +116,8 @@ final latestDeviceLocationProvider = StateProvider<LatLng?>((ref) => null);
 
 final locationProvider = FutureProvider<LatLng>((ref) {
   final useGps = ref.watch(useGpsProvider);
-  if (!useGps) return Future.value(const LatLng(52.2297, 21.0122));
+  if (!useGps) return Future.value(defaultDiscoveryCenter);
   final latestLocation = ref.watch(latestDeviceLocationProvider);
   if (latestLocation != null) return Future.value(latestLocation);
   return ref.watch(locationServiceProvider).initialPosition();
-});
+}, retry: (_, _) => null);

@@ -133,6 +133,9 @@
   ,"attachment": "Załącznik: {name}"
   ,"@attachment": {"placeholders": {"name": {}}}
   ,"attachmentPickError": "Nie udało się otworzyć wyboru załącznika. Spróbuj ponownie."
+  ,"openAttachment": "Otwórz załącznik"
+  ,"attachmentStoredOnDevice": "Przechowywany prywatnie na tym urządzeniu"
+  ,"attachmentOpenError": "Nie udało się otworzyć lokalnego załącznika."
   ,"nearbyPlaces": "Miejsca w pobliżu"
   ,"recommendationsNearLocation": "Rekomendacje bazują na lokalizacji początkowej. Przesuń mapę, aby odkryć inne miejsce."
   ,"recommendationsFollowMap": "Rekomendacje odpowiadają obszarowi widocznemu na mapie."
@@ -140,6 +143,7 @@
   ,"placesInCluster": "Miejsca w tym obszarze: {count}"
   ,"@placesInCluster": {"placeholders": {"count": {"type": "int"}}}
   ,"zoomInToSeparateMarkers": "Powiększ mapę, aby rozdzielić nakładające się znaczniki."
+  ,"highlightedOnMap": "Wyróżniono i wyśrodkowano na mapie"
   ,"selectPointBeforeIdea": "Wybierz punkt na mapie przed utworzeniem pomysłu."
   ,"locationServicesDisabled": "Usługi lokalizacji są wyłączone. Włącz je w ustawieniach systemu i spróbuj ponownie."
   ,"locationPermissionDenied": "Odmówiono dostępu do lokalizacji. Zezwól na dostęp w ustawieniach i spróbuj ponownie."

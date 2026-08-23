@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
-
 import '../../app/providers.dart';
 import '../../data/models/city_note.dart';
+import '../../data/models/map_focus_target.dart';
 import '../../data/models/saved_place_entity.dart';
 import '../../l10n/app_localizations.dart';
 import '../shared/add_saved_place_to_plan_sheet.dart';
+import '../shared/note_attachment.dart';
 import '../shared/note_sync_badge.dart';
 
 class SavedScreen extends ConsumerWidget {
@@ -77,10 +77,8 @@ class _SavedPlaceTile extends ConsumerWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        onTap: () => context.goNamed(
-          'map',
-          extra: LatLng(place.latitude, place.longitude),
-        ),
+        onTap: () =>
+            context.goNamed('map', extra: MapFocusTarget.savedPlace(place)),
         trailing: PopupMenuButton<_SavedPlaceAction>(
           tooltip: l10n.placeActions,
           onSelected: (action) => _handleAction(context, ref, action),
@@ -114,10 +112,7 @@ class _SavedPlaceTile extends ConsumerWidget {
         await showAddSavedPlaceToPlanSheet(context: context, place: place);
       case _SavedPlaceAction.showOnMap:
         if (context.mounted) {
-          context.goNamed(
-            'map',
-            extra: LatLng(place.latitude, place.longitude),
-          );
+          context.goNamed('map', extra: MapFocusTarget.savedPlace(place));
         }
       case _SavedPlaceAction.remove:
         final confirmed = await showDialog<bool>(
@@ -191,10 +186,20 @@ class _SavedNoteTile extends ConsumerWidget {
     child: ListTile(
       leading: const CircleAvatar(child: Icon(Icons.lightbulb_outline)),
       title: Text(note.title),
-      subtitle: Text(note.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(note.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (note.hasAttachment) ...[
+            const SizedBox(height: 4),
+            NoteAttachmentSummary(note: note),
+          ],
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (note.hasAttachment) NoteAttachmentOpenButton(note: note),
           NoteSyncBadge(status: note.syncStatus),
           IconButton(
             tooltip: AppLocalizations.of(context).deleteNote,
@@ -203,8 +208,7 @@ class _SavedNoteTile extends ConsumerWidget {
           ),
         ],
       ),
-      onTap: () =>
-          context.goNamed('map', extra: LatLng(note.latitude, note.longitude)),
+      onTap: () => context.goNamed('map', extra: MapFocusTarget.idea(note)),
     ),
   );
 

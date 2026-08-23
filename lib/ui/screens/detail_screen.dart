@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../data/models/map_focus_target.dart';
 import '../../data/models/tour_place.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -64,7 +65,12 @@ class DetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                onPressed: () => context.goNamed('map'),
+                onPressed: item == null
+                    ? null
+                    : () => context.goNamed(
+                        'map',
+                        extra: MapFocusTarget.place(item),
+                      ),
                 icon: const Icon(Icons.map_outlined),
                 label: Text(l10n.replaceWithMap),
               ),

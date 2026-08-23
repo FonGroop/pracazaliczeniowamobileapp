@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../app/providers.dart';
 import '../../data/models/city_note.dart';
+import '../../data/models/map_focus_target.dart';
 import '../../data/models/saved_place_entity.dart';
 import '../../data/models/tour_place.dart';
 import '../../data/services/location_service.dart';
@@ -16,12 +17,22 @@ import '../../l10n/app_localizations.dart';
 import '../shared/add_idea_map_button.dart';
 import '../shared/add_note_to_plan_sheet.dart';
 import '../shared/add_saved_place_to_plan_sheet.dart';
+import '../shared/note_attachment.dart';
 import '../shared/place_cluster_marker_button.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key, this.initialCenter});
+  const MapScreen({
+    super.key,
+    this.initialCenter,
+    this.focusTarget,
+    this.tileProvider,
+    this.mapController,
+  });
 
   final LatLng? initialCenter;
+  final MapFocusTarget? focusTarget;
+  final TileProvider? tileProvider;
+  final MapController? mapController;
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -30,17 +41,40 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   static const _placeClusterer = PlaceMarkerClusterer();
 
-  final _mapController = MapController();
+  late final MapController _mapController;
   Timer? _discoveryDebounce;
   LatLng? _selectedPosition;
+  MapFocusTarget? _focusedTarget;
   bool _mapReady = false;
   bool _initialLocationApplied = false;
   double _clusterZoom = 13.5;
 
   @override
+  void initState() {
+    super.initState();
+    _mapController = widget.mapController ?? MapController();
+    _focusedTarget = widget.focusTarget;
+    if (_focusedTarget != null) _clusterZoom = 17;
+  }
+
+  @override
+  void didUpdateWidget(covariant MapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusTarget?.key == oldWidget.focusTarget?.key) return;
+    final target = widget.focusTarget;
+    if (target == null) {
+      setState(() => _focusedTarget = null);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusOnTarget(target);
+    });
+  }
+
+  @override
   void dispose() {
     _discoveryDebounce?.cancel();
-    _mapController.dispose();
+    if (widget.mapController == null) _mapController.dispose();
     super.dispose();
   }
 
@@ -62,14 +96,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     };
     final savedPlaces =
         ref.watch(savedPlacesProvider).value ?? const <SavedPlaceEntity>[];
+    final recommendedIds = {for (final place in places) place.id};
+    final savedOnlyPlaces = savedPlaces.where(
+      (saved) => !recommendedIds.contains(saved.remoteId),
+    );
     final notes = ref.watch(notesProvider).value ?? const <CityNote>[];
     final mapCenter =
+        _focusedTarget?.position ??
         widget.initialCenter ??
         discoveryArea?.center ??
         resolvedLocation ??
-        const LatLng(52.2297, 21.0122);
+        defaultDiscoveryCenter;
     final waitingForInitialLocation =
         location.isLoading &&
+        _focusedTarget == null &&
         widget.initialCenter == null &&
         discoveryArea == null;
 
@@ -90,15 +130,23 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: mapCenter,
-              initialZoom: 13.5,
+              initialZoom: _focusedTarget != null
+                  ? 17
+                  : widget.initialCenter != null
+                  ? 16
+                  : 13.5,
               onMapReady: _handleMapReady,
               onPositionChanged: _scheduleDiscoveryUpdate,
-              onTap: (_, point) => setState(() => _selectedPosition = point),
+              onTap: (_, point) => setState(() {
+                _focusedTarget = null;
+                _selectedPosition = point;
+              }),
             ),
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.pracazaliczeniowamobileapp',
+                tileProvider: widget.tileProvider,
               ),
               MarkerLayer(
                 markers: [
@@ -124,7 +172,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           )
                         : _placeClusterMarker(cluster, savedPlaces),
                   ),
+                  ...savedOnlyPlaces.map(_savedPlaceMarker),
                   ...notes.map((note) => _noteMarker(note)),
+                  if (_focusedTarget case final target?)
+                    _focusedMarker(target, savedPlaces, notes),
                   if (_selectedPosition case final position?)
                     Marker(
                       point: position,
@@ -145,6 +196,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             right: 16,
             top: 16,
             child: Card(
+              key: _focusedTarget == null
+                  ? null
+                  : const ValueKey('map-focus-banner'),
               elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -156,19 +210,42 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.travel_explore, size: 20),
+                        Icon(
+                          _focusedTarget?.type == MapFocusType.idea
+                              ? Icons.edit_location_alt
+                              : _focusedTarget == null
+                              ? Icons.travel_explore
+                              : Icons.location_on,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(discoveryStatus)),
+                        Expanded(
+                          child: Text(
+                            _focusedTarget?.title ?? discoveryStatus,
+                            style: _focusedTarget == null
+                                ? null
+                                : Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (_focusedTarget != null)
+                          IconButton(
+                            tooltip: l10n.close,
+                            onPressed: () =>
+                                setState(() => _focusedTarget = null),
+                            icon: const Icon(Icons.close),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _selectedPosition == null
+                      _focusedTarget != null
+                          ? l10n.highlightedOnMap
+                          : _selectedPosition == null
                           ? l10n.mapIdeaPrompt
                           : l10n.mapIdeaSelected,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (placesState.isLoading) ...[
+                    if (_focusedTarget == null && placesState.isLoading) ...[
                       const SizedBox(height: 8),
                       const LinearProgressIndicator(),
                     ],
@@ -220,9 +297,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       child: IconButton.filled(
         tooltip: AppLocalizations.of(context).openDetails,
         icon: Icon(savedPlace == null ? Icons.location_on : Icons.bookmark),
-        onPressed: () => _showPlaceSheet(place, savedPlace),
+        onPressed: () => _focusAndShowPlace(place, savedPlace),
       ),
     ),
+  );
+
+  Marker _savedPlaceMarker(SavedPlaceEntity savedPlace) => _placeMarker(
+    TourPlace(
+      id: savedPlace.remoteId,
+      title: savedPlace.title,
+      body: savedPlace.notes,
+      latitude: savedPlace.latitude,
+      longitude: savedPlace.longitude,
+    ),
+    savedPlace,
   );
 
   Marker _placeClusterMarker(
@@ -306,7 +394,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       onTap: () {
                         Navigator.pop(sheetContext);
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _showPlaceSheet(place, savedPlace);
+                          if (mounted) {
+                            _focusAndShowPlace(place, savedPlace);
+                          }
                         });
                       },
                     );
@@ -387,33 +477,124 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     child: IconButton.filledTonal(
       tooltip: note.title,
       icon: const Icon(Icons.edit_location_alt),
-      onPressed: () => showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(note.title),
-          content: Text([note.body].join('\n\n')),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                this.context.pushNamed('ideaEdit', extra: note);
-              },
-              child: Text(AppLocalizations.of(this.context).editIdea),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await showAddNoteToPlanSheet(context: this.context, note: note);
-              },
-              child: Text(AppLocalizations.of(this.context).addToPlan),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(AppLocalizations.of(this.context).close),
-            ),
+      onPressed: () => _focusAndShowIdea(note),
+    ),
+  );
+
+  Marker _focusedMarker(
+    MapFocusTarget target,
+    List<SavedPlaceEntity> savedPlaces,
+    List<CityNote> notes,
+  ) => Marker(
+    point: target.position,
+    width: 74,
+    height: 74,
+    child: Semantics(
+      label: target.title,
+      button: true,
+      child: Container(
+        key: ValueKey('focused-map-marker-${target.key}'),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).colorScheme.tertiaryContainer,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.tertiary,
+            width: 5,
+          ),
+          boxShadow: const [
+            BoxShadow(color: Colors.black38, blurRadius: 10, spreadRadius: 2),
           ],
         ),
+        child: IconButton(
+          tooltip: target.title,
+          iconSize: 34,
+          icon: Icon(
+            target.type == MapFocusType.idea
+                ? Icons.edit_location_alt
+                : target.saved
+                ? Icons.bookmark
+                : Icons.location_on,
+          ),
+          onPressed: () {
+            if (target.type == MapFocusType.place) {
+              final savedPlace = savedPlaces
+                  .where((place) => place.remoteId == target.placeId)
+                  .firstOrNull;
+              _showPlaceSheet(target.asPlace, savedPlace);
+              return;
+            }
+            final note = notes
+                .where((note) => note.id == target.noteId)
+                .firstOrNull;
+            if (note != null) _showIdeaDialog(note);
+          },
+        ),
       ),
+    ),
+  );
+
+  void _focusAndShowPlace(TourPlace place, SavedPlaceEntity? savedPlace) {
+    _focusOnTarget(MapFocusTarget.place(place, saved: savedPlace != null));
+    _showPlaceSheet(place, savedPlace);
+  }
+
+  void _focusAndShowIdea(CityNote note) {
+    _focusOnTarget(MapFocusTarget.idea(note));
+    _showIdeaDialog(note);
+  }
+
+  void _focusOnTarget(MapFocusTarget target) {
+    setState(() {
+      _focusedTarget = target;
+      _selectedPosition = null;
+    });
+    if (!_mapReady) return;
+    _mapController.move(target.position, 17);
+    _updateClusterZoom(17);
+    _updateDiscoveryArea(_mapController.camera);
+  }
+
+  void _showIdeaDialog(CityNote note) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(note.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(note.body),
+          if (note.hasAttachment) ...[
+            const SizedBox(height: 12),
+            NoteAttachmentSummary(note: note),
+          ],
+        ],
+      ),
+      actions: [
+        if (note.hasAttachment)
+          TextButton.icon(
+            onPressed: () => openNoteAttachment(this.context, ref, note),
+            icon: const Icon(Icons.attachment_outlined),
+            label: Text(AppLocalizations.of(this.context).openAttachment),
+          ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            this.context.pushNamed('ideaEdit', extra: note);
+          },
+          child: Text(AppLocalizations.of(this.context).editIdea),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.of(context).pop();
+            await showAddNoteToPlanSheet(context: this.context, note: note);
+          },
+          child: Text(AppLocalizations.of(this.context).addToPlan),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(AppLocalizations.of(this.context).close),
+        ),
+      ],
     ),
   );
 
@@ -483,6 +664,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _updateClusterZoom(_mapController.camera.zoom);
+      if (_focusedTarget case final target?) {
+        _mapController.move(target.position, 17);
+        _updateClusterZoom(17);
+        _updateDiscoveryArea(_mapController.camera);
+        return;
+      }
       if (widget.initialCenter != null) {
         _updateDiscoveryArea(_mapController.camera);
         return;
@@ -495,6 +682,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _applyInitialLocation(LatLng location) {
     if (!_mapReady ||
         _initialLocationApplied ||
+        _focusedTarget != null ||
         widget.initialCenter != null ||
         ref.read(discoveryAreaProvider) != null) {
       return;

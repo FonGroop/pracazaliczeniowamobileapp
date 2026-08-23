@@ -133,6 +133,9 @@
   ,"attachment": "Attachment: {name}"
   ,"@attachment": {"placeholders": {"name": {}}}
   ,"attachmentPickError": "The attachment picker could not be opened. Try again."
+  ,"openAttachment": "Open attachment"
+  ,"attachmentStoredOnDevice": "Stored privately on this device"
+  ,"attachmentOpenError": "The local attachment could not be opened."
   ,"nearbyPlaces": "Nearby places"
   ,"recommendationsNearLocation": "Recommendations are based on your starting location. Move the map to explore somewhere else."
   ,"recommendationsFollowMap": "Recommendations follow the visible map area."
@@ -140,6 +143,7 @@
   ,"placesInCluster": "{count} places in this area"
   ,"@placesInCluster": {"placeholders": {"count": {"type": "int"}}}
   ,"zoomInToSeparateMarkers": "Zoom in to separate overlapping markers."
+  ,"highlightedOnMap": "Highlighted and centered on the map"
   ,"selectPointBeforeIdea": "Select a point on the map before creating an idea."
   ,"locationServicesDisabled": "Location Services are disabled. Enable them in system settings, then try again."
   ,"locationPermissionDenied": "Location permission was denied. Allow location access in settings, then try again."

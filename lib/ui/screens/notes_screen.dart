@@ -6,7 +6,9 @@ import 'package:latlong2/latlong.dart';
 
 import '../../app/providers.dart';
 import '../../data/models/city_note.dart';
+import '../../data/services/firebase_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../shared/note_attachment.dart';
 import '../shared/note_sync_badge.dart';
 
 class NotesScreen extends ConsumerWidget {
@@ -168,13 +170,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                         : l10n.changeAttachment,
                   ),
                 ),
-                if (_selectedAttachment?.name ?? _existing?.attachmentName
-                    case final attachmentName?) ...[
+                if (_selectedAttachment case final selected?) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    l10n.attachment(attachmentName),
-                    style: Theme.of(context).textTheme.bodySmall,
+                  ListTile(
+                    leading: const Icon(Icons.attach_file_outlined),
+                    title: Text(selected.name),
+                    subtitle: Text(l10n.attachmentStoredOnDevice),
                   ),
+                ] else if (_existing?.hasAttachment == true) ...[
+                  const SizedBox(height: 8),
+                  NoteAttachmentTile(note: _existing!),
                 ],
                 const SizedBox(height: 20),
                 FilledButton.icon(
@@ -235,7 +240,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         body: _bodyController.text.trim(),
         attachmentName: attachment?.name,
         attachmentPath: attachment?.localPath,
-        clearRemoteAttachment: attachment != null,
         modifiedAt: DateTime.now(),
       );
       final result = _existing == null
@@ -246,7 +250,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ref,
           result.synced
               ? AppLocalizations.of(context).ideaSaved
-              : AppLocalizations.of(context).ideaSavedDevice,
+              : [
+                  AppLocalizations.of(context).ideaSavedDevice,
+                  if (result.error != null) cloudUserMessage(result.error!),
+                ].join(' '),
         );
         context.pop();
       }
@@ -299,8 +306,23 @@ class _NoteTile extends ConsumerWidget {
     child: ListTile(
       leading: const CircleAvatar(child: Icon(Icons.sticky_note_2_outlined)),
       title: Text(note.title),
-      subtitle: Text(note.body, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: NoteSyncBadge(status: note.syncStatus),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(note.body, maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (note.hasAttachment) ...[
+            const SizedBox(height: 4),
+            NoteAttachmentSummary(note: note),
+          ],
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (note.hasAttachment) NoteAttachmentOpenButton(note: note),
+          NoteSyncBadge(status: note.syncStatus),
+        ],
+      ),
       onTap: () => context.pushNamed('ideaEdit', extra: note),
     ),
   );

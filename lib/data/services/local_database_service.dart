@@ -21,7 +21,25 @@ abstract interface class SavedPlaceStore {
   Future<void> deleteSavedPlace(int remoteId);
 }
 
-class LocalDatabaseService implements SavedPlaceStore {
+abstract interface class NoteStore {
+  Stream<List<CityNote>> watchNotes();
+
+  Future<void> saveNote(CityNote note);
+
+  Future<List<CityNote>> readNotes();
+
+  Future<CityNote?> readNote(String id);
+
+  Future<void> queueNoteDeletion(CityNote note);
+
+  Future<List<CityNote>> readPendingNoteDeletions();
+
+  Future<void> clearPendingNoteDeletion(String id);
+
+  Future<void> deleteNote(String id);
+}
+
+class LocalDatabaseService implements SavedPlaceStore, NoteStore {
   LocalDatabaseService._(this._database);
 
   static LocalDatabaseService? _instance;
@@ -61,6 +79,7 @@ class LocalDatabaseService implements SavedPlaceStore {
             .toList(),
       );
 
+  @override
   Stream<List<CityNote>> watchNotes() => _notes
       .query(finder: Finder(sortOrders: [SortOrder('createdAt', false)]))
       .onSnapshots(_database)
@@ -154,6 +173,7 @@ class LocalDatabaseService implements SavedPlaceStore {
   Future<void> deletePlanItem(String itemId) =>
       _planItems.record(itemId).delete(_database);
 
+  @override
   Future<void> saveNote(CityNote note) =>
       _notes.record(note.id).put(_database, note.toJson());
 
@@ -165,26 +185,32 @@ class LocalDatabaseService implements SavedPlaceStore {
     });
   }
 
+  @override
   Future<List<CityNote>> readNotes() async {
     final records = await _notes.find(_database);
     return records.map((record) => CityNote.fromJson(record.value)).toList();
   }
 
+  @override
   Future<CityNote?> readNote(String id) async {
     final value = await _notes.record(id).get(_database);
     return value == null ? null : CityNote.fromJson(value);
   }
 
+  @override
   Future<void> queueNoteDeletion(CityNote note) =>
       _pendingNoteDeletes.record(note.id).put(_database, note.toJson());
 
+  @override
   Future<List<CityNote>> readPendingNoteDeletions() async {
     final records = await _pendingNoteDeletes.find(_database);
     return records.map((record) => CityNote.fromJson(record.value)).toList();
   }
 
+  @override
   Future<void> clearPendingNoteDeletion(String id) =>
       _pendingNoteDeletes.record(id).delete(_database);
 
+  @override
   Future<void> deleteNote(String id) => _notes.record(id).delete(_database);
 }

@@ -6,7 +6,7 @@ map-based ideas and planning a day in the city.
 ## Requirements
 
 - Flutter SDK compatible with Dart `^3.12.0`
-- A Firebase project with Authentication, Cloud Firestore and Cloud Storage
+- A Firebase project with Authentication and Cloud Firestore
 - FlutterFire CLI (`dart pub global activate flutterfire_cli`)
 
 ## Run locally
@@ -54,21 +54,19 @@ Enable these services in Firebase Console:
 
 - **Authentication** → enable the **Anonymous** sign-in provider.
 - **Cloud Firestore** → create a database.
-- **Cloud Storage** → create the default bucket.
 
-Apply these Cloud Storage rules. They permit a signed-in user to access only
-their own idea attachments:
+## Idea attachments
 
-```text
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /city_notes/{userId}/{noteId}/{fileName} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+Attachments are intended for useful files tied to a map idea, such as tickets,
+reservation PDFs, reference photos or short text documents. Choose a file in
+the idea editor; the app keeps a private copy in its application-support
+directory. Firebase Storage and a paid Firebase plan are not required.
+
+The attachment filename and local-storage state are shown in Ideas, Saved
+Ideas, the idea editor and the map idea dialog. Tap the attachment button or
+card to open it in the device viewer. Firestore synchronizes the idea text and
+map coordinates, but the attached file deliberately remains on the device
+where it was selected.
 
 Apply these Firestore rules for ideas:
 

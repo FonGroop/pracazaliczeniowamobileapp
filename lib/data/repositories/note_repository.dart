@@ -30,9 +30,9 @@ class NoteRepository {
     required this.attachmentService,
   });
 
-  final LocalDatabaseService databaseService;
-  final FirebaseService firebaseService;
-  final AttachmentService attachmentService;
+  final NoteStore databaseService;
+  final NoteCloudStore firebaseService;
+  final AttachmentGateway attachmentService;
 
   Stream<List<CityNote>> watchNotes() => databaseService.watchNotes();
 
@@ -40,6 +40,21 @@ class NoteRepository {
     required XFile source,
     required String noteId,
   }) => attachmentService.persist(source: source, noteId: noteId);
+
+  Future<void> openAttachment(CityNote note) async {
+    final name = note.attachmentName;
+    if (name == null) {
+      throw const AttachmentOpenException('This idea has no attachment.');
+    }
+    final localPath = await attachmentService.resolveLocalPath(
+      name: name,
+      localPath: note.attachmentPath,
+    );
+    if (localPath != note.attachmentPath) {
+      await databaseService.saveNote(note.copyWith(attachmentPath: localPath));
+    }
+    await attachmentService.open(localPath);
+  }
 
   /// Always persists a note first. A cloud failure leaves it available and
   /// clearly marked for a later retry instead of losing the user's work.
@@ -92,8 +107,8 @@ class NoteRepository {
 
       await databaseService.saveNote(
         cloudNote.copyWith(
+          attachmentName: localNote?.attachmentName,
           attachmentPath: localNote?.attachmentPath,
-          syncStatus: NoteSyncStatus.synced,
         ),
       );
       downloaded++;
@@ -123,12 +138,11 @@ class NoteRepository {
   Future<void> deleteIdea(String id) => deleteNote(id);
 
   Future<void> _syncNote(CityNote note) async {
-    final withAttachment = note.attachmentRemotePath == null
-        ? await firebaseService.uploadAttachment(note)
-        : note;
-    await firebaseService.saveNote(withAttachment);
+    // Attachments are intentionally device-only. Firestore synchronizes the
+    // idea metadata without requiring a paid Firebase Storage bucket.
+    await firebaseService.saveNote(note);
     await databaseService.saveNote(
-      withAttachment.copyWith(syncStatus: NoteSyncStatus.synced),
+      note.copyWith(syncStatus: NoteSyncStatus.synced),
     );
   }
 
