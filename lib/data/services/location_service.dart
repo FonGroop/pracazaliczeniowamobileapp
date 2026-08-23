@@ -59,7 +59,7 @@ class GeolocatorGateway implements LocationGateway {
     final position = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 20),
+        timeLimit: Duration(seconds: 10),
       ),
     );
     return LatLng(position.latitude, position.longitude);
@@ -80,18 +80,59 @@ class GeolocatorGateway implements LocationGateway {
 }
 
 class LocationService {
-  LocationService({LocationGateway? gateway})
-    : _gateway = gateway ?? const GeolocatorGateway();
+  LocationService({
+    LocationGateway? gateway,
+    this.platformTimeout = const Duration(seconds: 2),
+    this.freshFixTimeout = const Duration(seconds: 5),
+  }) : _gateway = gateway ?? const GeolocatorGateway();
 
   final LocationGateway _gateway;
+  final Duration platformTimeout;
+  final Duration freshFixTimeout;
 
+  /// Fast startup path: use the device's last real fix before requesting a new
+  /// high-accuracy position. No hard-coded city is returned when GPS is on.
+  Future<LatLng> initialPosition() async {
+    try {
+      final lastKnown = await _gateway.getLastKnownPosition().timeout(
+        platformTimeout,
+      );
+      if (lastKnown != null) return lastKnown;
+    } on Object {
+      // A fresh fix below can still succeed if the platform has no cache.
+    }
+    await _ensureLocationAccess(requestPermissionIfNeeded: false);
+    return _freshPosition();
+  }
+
+  /// Explicit refresh path used by the map centering button.
   Future<LatLng> currentPosition() async {
-    if (!await _gateway.isServiceEnabled()) {
+    await _ensureLocationAccess(requestPermissionIfNeeded: true);
+    return _freshPosition();
+  }
+
+  Future<void> _ensureLocationAccess({
+    required bool requestPermissionIfNeeded,
+  }) async {
+    bool serviceEnabled;
+    try {
+      serviceEnabled = await _gateway.isServiceEnabled().timeout(
+        platformTimeout,
+      );
+    } on TimeoutException catch (error) {
+      throw LocationFixUnavailable(error);
+    }
+    if (!serviceEnabled) {
       throw const LocationServicesDisabled();
     }
 
-    var permission = await _gateway.checkPermission();
-    if (permission == LocationPermission.denied) {
+    LocationPermission permission;
+    try {
+      permission = await _gateway.checkPermission().timeout(platformTimeout);
+    } on TimeoutException catch (error) {
+      throw LocationFixUnavailable(error);
+    }
+    if (permission == LocationPermission.denied && requestPermissionIfNeeded) {
       permission = await _gateway.requestPermission();
     }
 
@@ -101,11 +142,20 @@ class LocationService {
     if (permission == LocationPermission.deniedForever) {
       throw const LocationPermissionPermanentlyDenied();
     }
+  }
 
+  Future<LatLng> _freshPosition() async {
     try {
-      return await _gateway.getCurrentPosition();
+      return await _gateway.getCurrentPosition().timeout(freshFixTimeout);
     } on Object catch (error) {
-      final lastKnown = await _gateway.getLastKnownPosition();
+      LatLng? lastKnown;
+      try {
+        lastKnown = await _gateway.getLastKnownPosition().timeout(
+          platformTimeout,
+        );
+      } on Object {
+        // The original fresh-fix error is more useful to the caller.
+      }
       if (lastKnown != null) return lastKnown;
       throw LocationFixUnavailable(error);
     }

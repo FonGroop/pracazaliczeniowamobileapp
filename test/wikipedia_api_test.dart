@@ -71,4 +71,25 @@ void main() {
     expect(pages.single.pageId, 823101);
     expect(requestedCoordinates, '50.061430|19.936580');
   });
+
+  test('a hanging Wikipedia request is capped by a total timeout', () async {
+    final dio = Dio();
+    dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {}));
+    final service = ApiService(
+      dio: dio,
+      endpointTemplate: 'https://{language}.wikipedia.org/w/api.php',
+      requestTimeout: const Duration(milliseconds: 10),
+    );
+
+    await expectLater(
+      service.fetchNearbyPlaces(center: const LatLng(52.2297, 21.0122)),
+      throwsA(
+        isA<PlacesApiException>().having(
+          (error) => error.message,
+          'message',
+          contains('timed out'),
+        ),
+      ),
+    );
+  });
 }

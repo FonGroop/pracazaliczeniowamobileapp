@@ -14,7 +14,6 @@ class CityCompanionApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(appBootstrapProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final textTheme = GoogleFonts.interTextTheme();

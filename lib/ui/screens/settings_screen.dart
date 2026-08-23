@@ -51,6 +51,8 @@ class SettingsScreen extends ConsumerWidget {
                       value: useGps,
                       onChanged: (value) async {
                         ref.read(useGpsProvider.notifier).state = value;
+                        ref.read(latestDeviceLocationProvider.notifier).state =
+                            null;
                         ref.read(discoveryAreaProvider.notifier).state = null;
                         ref.invalidate(locationProvider);
                         await persist(l10n.preferencesUpdated);

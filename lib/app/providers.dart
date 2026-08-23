@@ -31,16 +31,6 @@ void showAppNotice(WidgetRef ref, String message) {
   ref.read(appNoticeProvider.notifier).state = message;
 }
 
-final appBootstrapProvider = FutureProvider<void>((ref) async {
-  final prefs = await ref.watch(preferencesProvider.future);
-  await ref.read(planRepositoryProvider).migrateLegacyPlan(prefs);
-  ref.read(themeModeProvider.notifier).state = prefs.isDarkMode
-      ? ThemeMode.dark
-      : ThemeMode.light;
-  ref.read(localeProvider.notifier).state = Locale(prefs.languageCode);
-  ref.read(useGpsProvider.notifier).state = prefs.useGps;
-});
-
 final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
   return PlaceRepository(
     apiService: ApiService(),
@@ -63,13 +53,13 @@ final placesProvider = FutureProvider<List<TourPlace>>((ref) async {
   } else {
     searchCenter = await ref.watch(locationProvider.future);
   }
-  return ref
-      .watch(placeRepositoryProvider)
-      .loadPlaces(
-        languageCode: languageCode,
-        center: searchCenter,
-        radiusMeters: area?.radiusMeters ?? 5000,
-      );
+  final repository = ref.watch(placeRepositoryProvider);
+  final radiusMeters = area?.radiusMeters ?? 5000;
+  return repository.loadPlaces(
+    languageCode: languageCode,
+    center: searchCenter,
+    radiusMeters: radiusMeters,
+  );
 });
 
 final savedPlacesProvider = StreamProvider<List<SavedPlaceEntity>>((ref) {
@@ -108,8 +98,12 @@ final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
 });
 
+final latestDeviceLocationProvider = StateProvider<LatLng?>((ref) => null);
+
 final locationProvider = FutureProvider<LatLng>((ref) {
   final useGps = ref.watch(useGpsProvider);
   if (!useGps) return Future.value(const LatLng(52.2297, 21.0122));
-  return ref.watch(locationServiceProvider).currentPosition();
+  final latestLocation = ref.watch(latestDeviceLocationProvider);
+  if (latestLocation != null) return Future.value(latestLocation);
+  return ref.watch(locationServiceProvider).initialPosition();
 });

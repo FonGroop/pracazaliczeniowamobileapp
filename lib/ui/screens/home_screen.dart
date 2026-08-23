@@ -12,6 +12,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final places = ref.watch(placesProvider);
+    final visiblePlaces = places.value;
     final discoveryArea = ref.watch(discoveryAreaProvider);
     final l10n = AppLocalizations.of(context);
 
@@ -27,7 +28,10 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(placesProvider.future),
+        onRefresh: () {
+          ref.read(placeRepositoryProvider).clearRecommendationCache();
+          return ref.refresh(placesProvider.future);
+        },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -53,19 +57,27 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 10),
-            switch (places) {
-              AsyncData(:final value) => _PlacesGrid(items: value),
-              AsyncError(:final error) => _ErrorPanel(
+            if (visiblePlaces != null) ...[
+              _PlacesGrid(items: visiblePlaces),
+              if (places.isLoading) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+              ],
+            ] else if (places case AsyncError(:final error))
+              _ErrorPanel(
                 error: error.toString(),
-                onRetry: () => ref.invalidate(placesProvider),
-              ),
-              _ => const Center(
+                onRetry: () {
+                  ref.read(placeRepositoryProvider).clearRecommendationCache();
+                  ref.invalidate(placesProvider);
+                },
+              )
+            else
+              const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32),
                   child: CircularProgressIndicator(),
                 ),
               ),
-            },
           ],
         ),
       ),

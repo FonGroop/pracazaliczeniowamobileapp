@@ -33,7 +33,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   final _mapController = MapController();
   Timer? _discoveryDebounce;
   LatLng? _selectedPosition;
-  bool _discoveryInitialized = false;
+  bool _mapReady = false;
+  bool _initialLocationApplied = false;
   double _clusterZoom = 13.5;
 
   @override
@@ -48,11 +49,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final l10n = AppLocalizations.of(context);
     final location = ref.watch(locationProvider);
     final useGps = ref.watch(useGpsProvider);
-    final resolvedLocation = location.asData?.value;
+    final resolvedLocation = location.value;
     final currentLocation = useGps ? resolvedLocation : null;
     final discoveryArea = ref.watch(discoveryAreaProvider);
     final placesState = ref.watch(placesProvider);
-    final places = placesState.asData?.value ?? const <TourPlace>[];
+    final places = placesState.value ?? const <TourPlace>[];
     final placeClusters = _placeClusterer.cluster(places, zoom: _clusterZoom);
     final discoveryStatus = switch (placesState) {
       AsyncError() => l10n.guideError,
@@ -72,111 +73,119 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         widget.initialCenter == null &&
         discoveryArea == null;
 
+    ref.listen(locationProvider, (previous, next) {
+      if (next case AsyncData(:final value)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _applyInitialLocation(value);
+        });
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.map)),
-      body: waitingForInitialLocation
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: mapCenter,
-                    initialZoom: 13.5,
-                    onMapReady: _initializeDiscoveryFromMap,
-                    onPositionChanged: _scheduleDiscoveryUpdate,
-                    onTap: (_, point) =>
-                        setState(() => _selectedPosition = point),
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName:
-                          'com.example.pracazaliczeniowamobileapp',
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        if (currentLocation != null)
-                          Marker(
-                            point: currentLocation,
-                            width: 50,
-                            height: 50,
-                            child: Tooltip(
-                              message: l10n.yourLocation,
-                              child: Icon(
-                                Icons.my_location,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 34,
-                              ),
-                            ),
-                          ),
-                        ...placeClusters.map(
-                          (cluster) => cluster.places.length == 1
-                              ? _placeMarker(
-                                  cluster.places.single,
-                                  _savedPlaceFor(
-                                    cluster.places.single,
-                                    savedPlaces,
-                                  ),
-                                )
-                              : _placeClusterMarker(cluster, savedPlaces),
+      body: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: mapCenter,
+              initialZoom: 13.5,
+              onMapReady: _handleMapReady,
+              onPositionChanged: _scheduleDiscoveryUpdate,
+              onTap: (_, point) => setState(() => _selectedPosition = point),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.pracazaliczeniowamobileapp',
+              ),
+              MarkerLayer(
+                markers: [
+                  if (currentLocation != null)
+                    Marker(
+                      point: currentLocation,
+                      width: 50,
+                      height: 50,
+                      child: Tooltip(
+                        message: l10n.yourLocation,
+                        child: Icon(
+                          Icons.my_location,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 34,
                         ),
-                        ...notes.map((note) => _noteMarker(note)),
-                        if (_selectedPosition case final position?)
-                          Marker(
-                            point: position,
-                            width: 52,
-                            height: 52,
-                            child: Icon(
-                              Icons.add_location_alt,
-                              color: Theme.of(context).colorScheme.error,
-                              size: 38,
-                            ),
-                          ),
+                      ),
+                    ),
+                  ...placeClusters.map(
+                    (cluster) => cluster.places.length == 1
+                        ? _placeMarker(
+                            cluster.places.single,
+                            _savedPlaceFor(cluster.places.single, savedPlaces),
+                          )
+                        : _placeClusterMarker(cluster, savedPlaces),
+                  ),
+                  ...notes.map((note) => _noteMarker(note)),
+                  if (_selectedPosition case final position?)
+                    Marker(
+                      point: position,
+                      width: 52,
+                      height: 52,
+                      child: Icon(
+                        Icons.add_location_alt,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 38,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: 16,
+            child: Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.travel_explore, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(discoveryStatus)),
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedPosition == null
+                          ? l10n.mapIdeaPrompt
+                          : l10n.mapIdeaSelected,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (placesState.isLoading) ...[
+                      const SizedBox(height: 8),
+                      const LinearProgressIndicator(),
+                    ],
                   ],
                 ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  child: Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.travel_explore, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text(discoveryStatus)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _selectedPosition == null
-                                ? l10n.mapIdeaPrompt
-                                : l10n.mapIdeaSelected,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          if (placesState.isLoading) ...[
-                            const SizedBox(height: 8),
-                            const LinearProgressIndicator(),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
+          ),
+          if (waitingForInitialLocation)
+            const Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: LinearProgressIndicator(),
+            ),
+        ],
+      ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -413,8 +422,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final preferences = await ref.read(preferencesProvider.future);
     await preferences.setUseGps(true);
     try {
-      final position = await ref.refresh(locationProvider.future);
+      final position = await ref
+          .read(locationServiceProvider)
+          .currentPosition();
       if (!mounted) return;
+      ref.read(latestDeviceLocationProvider.notifier).state = position;
       _mapController.move(position, 14);
       _updateClusterZoom(_mapController.camera.zoom);
       _updateDiscoveryArea(_mapController.camera);
@@ -465,14 +477,31 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  void _initializeDiscoveryFromMap() {
-    if (_discoveryInitialized) return;
-    _discoveryInitialized = true;
+  void _handleMapReady() {
+    if (_mapReady) return;
+    _mapReady = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _updateClusterZoom(_mapController.camera.zoom);
-      _updateDiscoveryArea(_mapController.camera);
+      if (widget.initialCenter != null) {
+        _updateDiscoveryArea(_mapController.camera);
+        return;
+      }
+      final initialLocation = ref.read(locationProvider).value;
+      if (initialLocation != null) _applyInitialLocation(initialLocation);
     });
+  }
+
+  void _applyInitialLocation(LatLng location) {
+    if (!_mapReady ||
+        _initialLocationApplied ||
+        widget.initialCenter != null ||
+        ref.read(discoveryAreaProvider) != null) {
+      return;
+    }
+    _initialLocationApplied = true;
+    _mapController.move(location, 13.5);
+    _updateClusterZoom(_mapController.camera.zoom);
   }
 
   void _scheduleDiscoveryUpdate(MapCamera camera, bool hasGesture) {

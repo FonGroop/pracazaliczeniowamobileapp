@@ -114,8 +114,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Warsaw place'), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Warsaw place'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     krakowResponse.complete(const [krakow]);
     await tester.pumpAndSettle();

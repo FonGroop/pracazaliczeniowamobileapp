@@ -9,13 +9,50 @@ import '../services/local_database_service.dart';
 class PlaceRepository {
   PlaceRepository({required this.apiService, required this.databaseService});
 
-  final ApiService apiService;
-  final LocalDatabaseService databaseService;
+  final PlacesGateway apiService;
+  final SavedPlaceStore databaseService;
+  final _recommendationCache = <_PlaceSearchKey, List<TourPlace>>{};
+  final _requestsInProgress = <_PlaceSearchKey, Future<List<TourPlace>>>{};
 
   Future<List<TourPlace>> loadPlaces({
     String languageCode = 'en',
     required LatLng center,
     int radiusMeters = 5000,
+    bool forceRefresh = false,
+  }) {
+    final key = _placeSearchKey(
+      languageCode: languageCode,
+      center: center,
+      radiusMeters: radiusMeters,
+    );
+    if (!forceRefresh) {
+      final cached = _recommendationCache[key];
+      if (cached != null) return Future.value(cached);
+      final request = _requestsInProgress[key];
+      if (request != null) return request;
+    }
+
+    final request =
+        _loadPlacesFromSource(
+              languageCode: languageCode,
+              center: center,
+              radiusMeters: radiusMeters,
+            )
+            .then((places) {
+              _recommendationCache[key] = places;
+              return places;
+            })
+            .whenComplete(() {
+              _requestsInProgress.remove(key);
+            });
+    _requestsInProgress[key] = request;
+    return request;
+  }
+
+  Future<List<TourPlace>> _loadPlacesFromSource({
+    required String languageCode,
+    required LatLng center,
+    required int radiusMeters,
   }) async {
     try {
       final pages = await apiService.fetchNearbyPlaces(
@@ -39,6 +76,8 @@ class PlaceRepository {
     }
     return const <TourPlace>[];
   }
+
+  void clearRecommendationCache() => _recommendationCache.clear();
 
   List<TourPlace> _nearbyFallbackPlaces({
     required String languageCode,
@@ -178,3 +217,21 @@ class PlaceRepository {
     ),
   ];
 }
+
+typedef _PlaceSearchKey = ({
+  String languageCode,
+  int latitudeBucket,
+  int longitudeBucket,
+  int radiusBucket,
+});
+
+_PlaceSearchKey _placeSearchKey({
+  required String languageCode,
+  required LatLng center,
+  required int radiusMeters,
+}) => (
+  languageCode: languageCode == 'pl' ? 'pl' : 'en',
+  latitudeBucket: (center.latitude * 1000).round(),
+  longitudeBucket: (center.longitude * 1000).round(),
+  radiusBucket: (radiusMeters / 500).round(),
+);

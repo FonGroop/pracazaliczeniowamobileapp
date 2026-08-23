@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -14,24 +16,38 @@ class PlacesApiException implements Exception {
   String toString() => 'PlacesApiException: $message';
 }
 
-class ApiService {
-  ApiService({Dio? dio, String? endpointTemplate})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 6),
-              receiveTimeout: const Duration(seconds: 6),
-              headers: const {
-                'Api-User-Agent': 'CityCompanion/1.0 (Flutter student project)',
-              },
-            ),
-          ),
-      _endpointTemplate = endpointTemplate ?? Env.placesApiUrl;
+abstract interface class PlacesGateway {
+  Future<List<WikipediaPlaceDto>> fetchNearbyPlaces({
+    String languageCode = 'en',
+    required LatLng center,
+    int radiusMeters = 5000,
+  });
+}
+
+class ApiService implements PlacesGateway {
+  ApiService({
+    Dio? dio,
+    String? endpointTemplate,
+    this.requestTimeout = const Duration(seconds: 4),
+  }) : _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               connectTimeout: const Duration(seconds: 4),
+               receiveTimeout: const Duration(seconds: 4),
+               headers: const {
+                 'Api-User-Agent':
+                     'CityCompanion/1.0 (Flutter student project)',
+               },
+             ),
+           ),
+       _endpointTemplate = endpointTemplate ?? Env.placesApiUrl;
 
   final Dio _dio;
   final String _endpointTemplate;
+  final Duration requestTimeout;
 
+  @override
   Future<List<WikipediaPlaceDto>> fetchNearbyPlaces({
     String languageCode = 'en',
     required LatLng center,
@@ -70,24 +86,26 @@ class ApiService {
     required int radiusMeters,
   }) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        endpoint,
-        queryParameters: {
-          'action': 'query',
-          'generator': 'geosearch',
-          'ggscoord': coordinates,
-          'ggsradius': radiusMeters,
-          'ggslimit': 10,
-          'ggsnamespace': 0,
-          'prop': 'coordinates|extracts',
-          'exintro': 1,
-          'explaintext': 1,
-          'exchars': 260,
-          'format': 'json',
-          'formatversion': 2,
-          'origin': '*',
-        },
-      );
+      final response = await _dio
+          .get<Map<String, dynamic>>(
+            endpoint,
+            queryParameters: {
+              'action': 'query',
+              'generator': 'geosearch',
+              'ggscoord': coordinates,
+              'ggsradius': radiusMeters,
+              'ggslimit': 10,
+              'ggsnamespace': 0,
+              'prop': 'coordinates|extracts',
+              'exintro': 1,
+              'explaintext': 1,
+              'exchars': 260,
+              'format': 'json',
+              'formatversion': 2,
+              'origin': '*',
+            },
+          )
+          .timeout(requestTimeout);
 
       final json = response.data;
       if (json == null) {
@@ -97,6 +115,8 @@ class ApiService {
       return WikipediaGeoSearchResponse.fromJson(json).query.pages;
     } on PlacesApiException {
       rethrow;
+    } on TimeoutException catch (error) {
+      throw PlacesApiException('Wikipedia request timed out.', error);
     } on DioException catch (error) {
       throw PlacesApiException('Wikipedia request failed.', error);
     } on Object catch (error) {

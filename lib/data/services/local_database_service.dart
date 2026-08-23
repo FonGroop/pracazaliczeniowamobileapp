@@ -7,7 +7,21 @@ import '../models/plan_item.dart';
 import '../models/saved_place_entity.dart';
 import '../models/travel_plan.dart';
 
-class LocalDatabaseService {
+abstract interface class SavedPlaceStore {
+  Stream<List<SavedPlaceEntity>> watchSavedPlaces();
+
+  Future<void> savePlace({
+    required int remoteId,
+    required String title,
+    required String notes,
+    required double latitude,
+    required double longitude,
+  });
+
+  Future<void> deleteSavedPlace(int remoteId);
+}
+
+class LocalDatabaseService implements SavedPlaceStore {
   LocalDatabaseService._(this._database);
 
   static LocalDatabaseService? _instance;
@@ -37,6 +51,7 @@ class LocalDatabaseService {
     return service;
   }
 
+  @override
   Stream<List<SavedPlaceEntity>> watchSavedPlaces() => _savedPlaces
       .query(finder: Finder(sortOrders: [SortOrder('savedAt', false)]))
       .onSnapshots(_database)
@@ -82,6 +97,7 @@ class LocalDatabaseService {
             records.map((record) => PlanItem.fromJson(record.value)).toList(),
       );
 
+  @override
   Future<void> savePlace({
     required int remoteId,
     required String title,
@@ -100,6 +116,7 @@ class LocalDatabaseService {
     await _savedPlaces.record('$remoteId').put(_database, place.toJson());
   }
 
+  @override
   Future<void> deleteSavedPlace(int remoteId) =>
       _savedPlaces.record('$remoteId').delete(_database);
 
