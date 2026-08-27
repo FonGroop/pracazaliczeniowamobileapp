@@ -111,6 +111,7 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
                   onPressed: _isSaving
                       ? null
                       : () async {
+                          _dismissKeyboard();
                           final picked = await showDatePicker(
                             context: context,
                             initialDate: _date,
@@ -130,14 +131,7 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: _isSaving
-                      ? null
-                      : () async {
-                          final selected = await openFile();
-                          if (selected != null && mounted) {
-                            setState(() => _fileName = selected.name);
-                          }
-                        },
+                  onPressed: _isSaving ? null : _pickAttachment,
                   icon: const Icon(Icons.attach_file),
                   label: Text(_fileName ?? l10n.choosePlanFile),
                 ),
@@ -161,7 +155,16 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
     );
   }
 
+  Future<void> _pickAttachment() async {
+    _dismissKeyboard();
+    final selected = await openFile();
+    if (selected != null && mounted) {
+      setState(() => _fileName = selected.name);
+    }
+  }
+
   Future<void> _createPlan() async {
+    _dismissKeyboard();
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     final plan = await ref
@@ -175,6 +178,8 @@ class _PlanEditorScreenState extends ConsumerState<PlanEditorScreen> {
     if (!mounted) return;
     context.goNamed('planDetails', pathParameters: {'id': plan.id});
   }
+
+  void _dismissKeyboard() => FocusManager.instance.primaryFocus?.unfocus();
 }
 
 class _PlanList extends StatelessWidget {

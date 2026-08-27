@@ -202,6 +202,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _pickAttachment() async {
+    _dismissKeyboard();
     try {
       final selected = await openFile();
       if (selected != null && mounted) {
@@ -215,6 +216,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _save() async {
+    _dismissKeyboard();
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     final id =
@@ -265,6 +267,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (mounted) setState(() => _isSaving = false);
     }
   }
+
+  void _dismissKeyboard() => FocusManager.instance.primaryFocus?.unfocus();
 
   Future<void> _delete() async {
     final note = _existing;

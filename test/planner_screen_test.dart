@@ -63,4 +63,33 @@ void main() {
     expect(find.text('Nowy plan'), findsOneWidget);
     expect(find.text('Plan your next city day'), findsNothing);
   });
+
+  testWidgets('releases text focus when create plan is tapped', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: PlanEditorScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final nameField = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+    expect(nameField.focusNode.hasFocus, isTrue);
+
+    await tester.ensureVisible(find.byIcon(Icons.arrow_forward));
+    await tester.tap(find.byIcon(Icons.arrow_forward));
+    await tester.pump();
+
+    expect(nameField.focusNode.hasFocus, isFalse);
+  });
 }

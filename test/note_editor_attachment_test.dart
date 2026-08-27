@@ -68,4 +68,33 @@ void main() {
     expect(find.text('Stored privately on this device'), findsOneWidget);
     expect(find.byIcon(Icons.open_in_new), findsOneWidget);
   });
+
+  testWidgets('releases text focus when save is tapped', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: NoteEditorScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final titleField = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+    expect(titleField.focusNode.hasFocus, isTrue);
+
+    await tester.ensureVisible(find.byIcon(Icons.save_outlined));
+    await tester.tap(find.byIcon(Icons.save_outlined));
+    await tester.pump();
+
+    expect(titleField.focusNode.hasFocus, isFalse);
+  });
 }
